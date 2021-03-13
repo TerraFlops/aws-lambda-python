@@ -57,7 +57,13 @@ resource "aws_lambda_function" "lambda" {
   memory_size = var.lambda_memory
   timeout = var.lambda_timeout
   environment {
-    variables = var.lambda_environment_variables
+    variables = merge({
+      'LAMBDA_FUNCTION_NAME': var.lambda_name,
+      'LAMBDA_IAM_ROLE_ARN': aws_iam_role.lambda.arn,
+      'LAMBDA_MEMORY_SIZE': var.lambda_memory,
+      'LAMBDA_RUNTIME': local.lambda_runtime,
+      'LAMBDA_TIMEOUT': var.lambda_timeout
+    }, var.lambda_environment_variables)
   }
   vpc_config {
     subnet_ids = var.lambda_subnet_ids
