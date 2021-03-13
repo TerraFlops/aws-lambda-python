@@ -49,7 +49,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = local.lambda_name_snake
   description = var.lambda_description
   filename = local.lambda_filename
-  source_code_hash = fileexists(local.lambda_filename) == true ? filebase64sha256(data.archive_file.lambda_delta.output_path) : null
+  source_code_hash = filebase64sha256(data.archive_file.lambda_delta.output_path)
   role = aws_iam_role.lambda.arn
   handler = var.lambda_handler
   runtime = local.lambda_runtime
