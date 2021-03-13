@@ -60,7 +60,7 @@ variable "load_balancer_port_lambda" {
 }
 
 variable "load_balancer_domain_name_enabled" {
-  type = string
+  type = bool
   default = false
 }
 
