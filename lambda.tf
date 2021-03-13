@@ -2,17 +2,16 @@ locals {
   # Calculate values for internal use
   timestamp = formatdate("YYYYMMDDhhmmss", timestamp())
   lambda_name_snake = join("", [for element in split("-", lower(replace(var.lambda_name, "_", "-"))) : title(element)])
-  lambda_cloudwatch_log_group_name = "/aws/lambda/${local.lambda_name_snake}"
-  lambda_build_path = "/tmp/lambda-build-${var.lambda_name}/${local.timestamp}"
-  lambda_filename = "/tmp/lambda-${var.lambda_name}.zip"
-  lambda_delta_filename = "/tmp/lambda-delta-${var.lambda_name}.zip"
-  lambda_hash_filename = "/tmp/lambda-hash-${var.lambda_name}.txt"
   lambda_runtime = "python${var.lambda_python_version}"
+  lambda_delta_filename = "/tmp/lambda-${var.lambda_name}-delta-${local.timestamp}.zip"
+  lambda_build_path = "/tmp/lambda-${var.lambda_name}-build-${local.timestamp}"
+  lambda_filename = "/tmp/lambda-${var.lambda_name}-${local.timestamp}.zip"
 }
 
 # Retrieve the AWS region and caller identity to which we are deploying this function
 data "aws_region" "default" {}
 data "aws_caller_identity" "default" {}
+
 
 # Archive the folder containing the Lambda functions source code
 data "archive_file" "lambda_delta" {
@@ -23,6 +22,9 @@ data "archive_file" "lambda_delta" {
 
 # Pull down the Lambda functions dependencies to create ZIP file
 resource "null_resource" "lambda_build" {
+  depends_on = [
+    data.archive_file.lambda_delta
+  ]
   # Trigger the build based on the hash of the Lambda functions source code to prevent unnecessary redeploys
   triggers = {
     source_hash = filesha512(data.archive_file.lambda_delta.output_path)
@@ -35,18 +37,10 @@ resource "null_resource" "lambda_build" {
       python3 -m pip install --upgrade pip;
       touch ${local.lambda_build_path}/requirements.txt;
       pip3 install -r ${local.lambda_build_path}/requirements.txt -t ${local.lambda_build_path};
+      cd ${local.lambda_build_path};
+      zip -r ${local.lambda_filename} .;
     COMMAND
   }
-}
-
-# Create a zip of the build project
-resource "archive_file" "lambda_zip" {
-  depends_on = [
-    null_resource.lambda_build
-  ]
-  type = "zip"
-  source_dir = local.lambda_build_path
-  output_path = local.lambda_filename
 }
 
 # Lambda function
@@ -56,8 +50,7 @@ resource "aws_lambda_function" "lambda" {
   ]
   function_name = local.lambda_name_snake
   description = var.lambda_description
-  filename = archive_file.lambda_zip.output_path
-  source_code_hash = filebase64sha256(data.archive_file.lambda_delta.output_path)
+  filename = local.lambda_filename
   role = aws_iam_role.lambda.arn
   handler = var.lambda_handler
   runtime = local.lambda_runtime

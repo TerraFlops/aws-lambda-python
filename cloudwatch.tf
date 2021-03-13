@@ -1,3 +1,8 @@
+locals {
+  # The CloudWatch log group name is dictated by AWS in the format `/aws/lambda/function`
+  lambda_cloudwatch_log_group_name = "/aws/lambda/${local.lambda_name_snake}"
+}
+
 # Create CloudWatch log group for the Lambda function
 resource "aws_cloudwatch_log_group" "lambda" {
   depends_on = [
