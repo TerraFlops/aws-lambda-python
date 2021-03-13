@@ -35,10 +35,18 @@ resource "null_resource" "lambda_build" {
       python3 -m pip install --upgrade pip;
       touch ${local.lambda_build_path}/requirements.txt;
       pip3 install -r ${local.lambda_build_path}/requirements.txt -t ${local.lambda_build_path};
-      cd ${local.lambda_build_path};
-      zip -r ${local.lambda_filename} ${local.lambda_build_path};
     COMMAND
   }
+}
+
+# Create a zip of the build project
+resource "archive_file" "lambda_zip" {
+  depends_on = [
+    null_resource.lambda_build
+  ]
+  type = "zip"
+  source_dir = local.lambda_build_path
+  output_path = local.lambda_filename
 }
 
 # Lambda function
@@ -48,7 +56,7 @@ resource "aws_lambda_function" "lambda" {
   ]
   function_name = local.lambda_name_snake
   description = var.lambda_description
-  filename = local.lambda_filename
+  filename = archive_file.lambda_zip.output_path
   source_code_hash = filebase64sha256(data.archive_file.lambda_delta.output_path)
   role = aws_iam_role.lambda.arn
   handler = var.lambda_handler
