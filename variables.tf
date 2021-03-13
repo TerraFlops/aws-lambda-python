@@ -44,6 +44,11 @@ variable "lambda_security_group_ids" {
   type = set(string)
 }
 
+variable "lambda_environment_variables" {
+  type = map(string)
+  default = {}
+}
+
 variable "load_balancer_enabled" {
   type = bool
   default = false

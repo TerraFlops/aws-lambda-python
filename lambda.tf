@@ -56,6 +56,9 @@ resource "aws_lambda_function" "lambda" {
   runtime = local.lambda_runtime
   memory_size = var.lambda_memory
   timeout = var.lambda_timeout
+  environment {
+    variables = var.lambda_environment_variables
+  }
   vpc_config {
     subnet_ids = var.lambda_subnet_ids
     security_group_ids = var.lambda_security_group_ids
