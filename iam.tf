@@ -21,18 +21,6 @@ resource "aws_iam_role" "lambda" {
 data "aws_iam_policy_document" "lambda_application_policy" {
   version = "2012-10-17"
   statement {
-    sid = "SsmParameterAccess"
-    actions = [
-      "ssm:GetParameters",
-      "ssm:GetParameter",
-      "ssm:GetParametersByPath"
-    ]
-    effect = "Allow"
-    resources = [
-      "arn:aws:ssm:${data.aws_region.default.name}:${data.aws_caller_identity.default.account_id}:parameter/SLACKBOT/*",
-    ]
-  }
-  statement {
     sid = "VpcNetworkInterfaceAccess"
     actions = [
       "ec2:CreateNetworkInterface",
