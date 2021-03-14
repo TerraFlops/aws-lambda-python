@@ -10,6 +10,10 @@ output "lambda_iam_role_arn" {
   value = aws_iam_role.lambda.arn
 }
 
+output "lambda_iam_role_name" {
+  value = aws_iam_role.lambda.name
+}
+
 output "load_balancer_arn" {
   value = var.load_balancer_enabled == true ? aws_lb.load_balancer[0].arn : null
 }
