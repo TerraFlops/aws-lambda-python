@@ -61,6 +61,7 @@ data "aws_iam_policy_document" "lambda_application_policy" {
 
 # Attach application policy to the Lambda functions IAM role
 resource "aws_iam_role_policy" "lambda_application_policy" {
+  name = "${local.lambda_name_snake}Lambda"
   role = aws_iam_role.lambda.name
   policy = data.aws_iam_policy_document.lambda_application_policy.json
 }
