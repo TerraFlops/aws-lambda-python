@@ -33,7 +33,7 @@ variable "lambda_cloudwatch_encryption_enabled" {
 
 variable "lambda_cloudwatch_retention_in_days" {
   type = number
-  default = 3650
+  default = 3653
 }
 
 variable "lambda_subnet_ids" {
