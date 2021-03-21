@@ -34,7 +34,7 @@ resource "null_resource" "lambda_build" {
     command = <<-COMMAND
       echo "Creating build path: ${local.lambda_build_path}/"
       mkdir -p ${local.lambda_build_path}/ || exit 1;
-      echo "Copying: ${var.lambda_path}/. -> ${local.lambda_build_path}/
+      echo "Copying: ${var.lambda_path}/. -> ${local.lambda_build_path}/"
       cp -a ${var.lambda_path}/. ${local.lambda_build_path}/;
       echo "Installing Python dependencies"
       python3 -m pip install --upgrade pip;
