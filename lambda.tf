@@ -32,13 +32,18 @@ resource "null_resource" "lambda_build" {
   provisioner "local-exec" {
     # Build the Lambda function
     command = <<-COMMAND
-      mkdir -p ${local.lambda_build_path}/;
+      echo "Creating build path: ${local.lambda_build_path}/"
+      mkdir -p ${local.lambda_build_path}/ || exit 1;
+      echo "Copying: ${var.lambda_path}/. -> ${local.lambda_build_path}/
       cp -a ${var.lambda_path}/. ${local.lambda_build_path}/;
+      echo "Installing Python dependencies"
       python3 -m pip install --upgrade pip;
       touch ${local.lambda_build_path}/requirements.txt;
       pip3 install -r ${local.lambda_build_path}/requirements.txt -t ${local.lambda_build_path};
       cd ${local.lambda_build_path};
+      echo "Compressing: ${local.lambda_filename}"
       zip -r ${local.lambda_filename} .;
+      ls -l ${local.lambda_build_path};
     COMMAND
   }
 }
