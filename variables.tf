@@ -117,3 +117,8 @@ variable "load_balancer_security_group_ids" {
   type = set(string)
   default = []
 }
+
+variable "ignore_change" {
+  type = bool
+  default = false
+}

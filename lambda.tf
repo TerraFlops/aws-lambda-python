@@ -80,4 +80,16 @@ resource "aws_lambda_function" "lambda" {
       security_group_ids = vpc_config.value.security_group_ids
     }
   }
+  dynamic "lifecycle" {
+    for_each = var.ignore_change == false ? {} : {
+      ignore_changes = [
+        "filename",
+        "last_modified",
+        "source_code_hash",
+        "source_code_size"]
+    }
+    content {
+      ignore_changes = lifecycle.value["ignore_changes"]
+    }
+  }
 }
