@@ -14,6 +14,7 @@ data "aws_caller_identity" "default" {}
 
 # Archive the folder containing the Lambda functions source code
 data "archive_file" "lambda_delta" {
+  count = var.ignore_changes == false ? 1 : 0
   type = "zip"
   source_dir = "${var.lambda_path}/"
   output_path = local.lambda_delta_filename
@@ -26,7 +27,7 @@ resource "null_resource" "lambda_build" {
   ]
   # Trigger the build based on the hash of the Lambda functions source code to prevent unnecessary redeploys
   triggers = {
-    source_hash = filesha512(data.archive_file.lambda_delta.output_path)
+    source_hash = filesha512(data.archive_file.lambda_delta[0].output_path) && var.ignore_changes == false
   }
   provisioner "local-exec" {
     # Build the Lambda function
@@ -46,7 +47,7 @@ resource "null_resource" "lambda_build" {
   }
 }
 
-# Lambda function
+# Lambda function (this version will be created if Terraform is set to ignore code changes)
 resource "aws_lambda_function" "lambda_ignored" {
   count = var.ignore_changes == true ? 1 : 0
   depends_on = [
@@ -85,7 +86,7 @@ resource "aws_lambda_function" "lambda_ignored" {
   }
 }
 
-# Lambda function
+# Lambda function (this version will be created if Terraform is NOT ignoring code changes)
 resource "aws_lambda_function" "lambda_updated" {
   count = var.ignore_changes == false ? 1 : 0
   depends_on = [
