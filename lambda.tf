@@ -27,7 +27,7 @@ resource "null_resource" "lambda_build" {
   ]
   # Trigger the build based on the hash of the Lambda functions source code to prevent unnecessary redeploys
   triggers = {
-    source_hash = filesha512(data.archive_file.lambda_delta[0].output_path) && var.ignore_changes == false
+    source_hash = var.ignore_changes == true ? null : filesha512(data.archive_file.lambda_delta[0].output_path)
   }
   provisioner "local-exec" {
     # Build the Lambda function
