@@ -56,7 +56,7 @@ resource "aws_lambda_function" "lambda_ignored" {
   description = var.lambda_description
   filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}-${var.lambda_name}.zip"
   s3_bucket = var.lambda_s3_bucket != null ? var.lambda_s3_bucket : null
-  s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}.zip" : null
+  s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}-${var.lambda_name}.zip" : null
   role = var.lambda_iam_role_arn
   handler = var.lambda_handler
   runtime = local.lambda_runtime
