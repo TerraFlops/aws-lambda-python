@@ -1,14 +1,18 @@
-resource "aws_lambda_permission" "lambda" {
-  count = var.load_balancer_enabled == true ? 1 : 0
-  statement_id = "LoadBalancerInvokeAccess"
-  function_name = aws_lambda_function.lambda.function_name
+resource "aws_lambda_permission" "load_balancer" {
+  count = var.load_balancer_enabled == false ? 0 : 1
+  statement_id = "AllowExecutionFromLoadBalancer"
   action = "lambda:InvokeFunction"
+  function_name = local.function_name
   principal = "elasticloadbalancing.amazonaws.com"
+  qualifier = aws_lambda_alias.lambda.name
 }
 
 resource "aws_lb" "load_balancer" {
+  depends_on = [
+    aws_lambda_permission.load_balancer
+  ]
   count = var.load_balancer_enabled == true ? 1 : 0
-  name = local.lambda_name_snake
+  name = local.lambda_name_camel
   internal = false
   load_balancer_type = "application"
   subnets = var.load_balancer_subnet_ids
@@ -28,6 +32,9 @@ resource "aws_route53_record" "load_balancer" {
 }
 
 resource "aws_lb_listener" "load_balancer" {
+  depends_on = [
+    aws_lambda_permission.load_balancer
+  ]
   count = var.load_balancer_enabled == true ? 1 : 0
   load_balancer_arn = aws_lb.load_balancer[0].arn
   port = var.load_balancer_port_public
@@ -48,11 +55,11 @@ resource "aws_lb_listener" "load_balancer" {
 # Create target group to forward requests to
 resource "aws_lb_target_group" "load_balancer" {
   depends_on = [
-    aws_lambda_permission.lambda
+    aws_lambda_permission.load_balancer
   ]
   count = var.load_balancer_enabled == true ? 1 : 0
   target_type = "lambda"
-  name = aws_lambda_function.lambda.function_name
+  name = local.function_name
   port = var.load_balancer_port_lambda
   protocol = "HTTP"
   health_check {
@@ -61,17 +68,24 @@ resource "aws_lb_target_group" "load_balancer" {
     path = var.load_balancer_enabled == true ? var.load_balancer_health_check_url : null
     interval = var.load_balancer_enabled == true ? var.load_balancer_health_check_interval : null
   }
+  lambda_multi_value_headers_enabled = true
 }
 
 # Attach the target group the load balancer
 resource "aws_lb_target_group_attachment" "load_balancer" {
+  depends_on = [
+    aws_lambda_permission.load_balancer
+  ]
   count = var.load_balancer_enabled == true ? 1 : 0
   target_group_arn = aws_lb_target_group.load_balancer[0].arn
-  target_id = aws_lambda_function.lambda.arn
+  target_id = local.function_arn
 }
 
 # Create load balancer listener rule
 resource "aws_lb_listener_rule" "load_balancer" {
+  depends_on = [
+    aws_lambda_permission.load_balancer
+  ]
   count = var.load_balancer_enabled == true ? 1 : 0
   listener_arn = aws_lb_listener.load_balancer[0].arn
   priority = 100
@@ -81,7 +95,7 @@ resource "aws_lb_listener_rule" "load_balancer" {
   }
   condition {
     path_pattern {
-      values = ["/*"]
+      values = var.load_balancer_path_patterns != null ? var.load_balancer_path_patterns : ["/*"]
     }
   }
 }

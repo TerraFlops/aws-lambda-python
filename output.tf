@@ -1,21 +1,13 @@
 output "lambda_function_arn" {
-  value = aws_lambda_function.lambda.arn
+  value = local.function_arn
 }
 
 output "lambda_function_name" {
-  value = aws_lambda_function.lambda.function_name
+  value = local.function_name
 }
 
 output "lambda_function_version" {
-  value = aws_lambda_function.lambda.version
-}
-
-output "lambda_iam_role_arn" {
-  value = aws_iam_role.lambda.arn
-}
-
-output "lambda_iam_role_name" {
-  value = aws_iam_role.lambda.name
+  value = local.function_version
 }
 
 output "load_balancer_arn" {

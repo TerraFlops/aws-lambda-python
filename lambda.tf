@@ -1,11 +1,10 @@
 locals {
   # Calculate values for internal use
   timestamp = formatdate("YYYYMMDDhhmmss", timestamp())
-  lambda_name_snake = join("", [for element in split("-", lower(replace(var.lambda_name, "_", "-"))) : title(element)])
+  lambda_name_camel = join("", [for element in split("-", lower(replace(var.lambda_name, "_", "-"))) : title(element)])
   lambda_runtime = "python${var.lambda_python_version}"
   lambda_delta_filename = "/tmp/lambda-${var.lambda_name}-delta-${local.timestamp}.zip"
-  lambda_build_path = "/tmp/lambda-${var.lambda_name}-build-${local.timestamp}"
-  lambda_filename = "/tmp/lambda-${var.lambda_name}-${local.timestamp}.zip"
+  lambda_output_path = "/tmp/lambda-${var.lambda_name}-output"
 }
 
 # Retrieve the AWS region and caller identity to which we are deploying this function
@@ -32,31 +31,33 @@ resource "null_resource" "lambda_build" {
   provisioner "local-exec" {
     # Build the Lambda function
     command = <<-COMMAND
-      echo "Creating build path: ${local.lambda_build_path}/"
-      mkdir -p ${local.lambda_build_path}/ || exit 1;
-      echo "Copying: ${var.lambda_path}/. -> ${local.lambda_build_path}/"
-      cp -a ${var.lambda_path}/. ${local.lambda_build_path}/;
-      echo "Installing Python dependencies"
-      python3 -m pip install --upgrade pip;
-      touch ${local.lambda_build_path}/requirements.txt;
-      pip3 install -r ${local.lambda_build_path}/requirements.txt -t ${local.lambda_build_path};
-      cd ${local.lambda_build_path};
-      echo "Compressing: ${local.lambda_filename}"
-      zip -r ${local.lambda_filename} .;
-      ls -l ${local.lambda_build_path};
+      mkdir -p ${local.lambda_output_path};
+      docker run --rm \
+        -v $(realpath ${var.lambda_path})/:/opt/src \
+        -v ${local.lambda_output_path}/:/opt/output \
+        eonxcom/lambda-build-python-${var.lambda_python_version}:latest \
+        package_local "${local.timestamp}.zip";
+      if [ ! -z "${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}" ]; then
+        aws s3 cp ${local.lambda_output_path}/${local.timestamp}.zip s3://${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}/${local.timestamp}.zip \
+          --acl bucket-owner-full-control \
+          --sse AES256;
+      fi;
     COMMAND
   }
 }
 
 # Lambda function
-resource "aws_lambda_function" "lambda" {
+resource "aws_lambda_function" "lambda_ignored" {
+  count = var.ignore_changes == true ? 1 : 0
   depends_on = [
     null_resource.lambda_build
   ]
-  function_name = local.lambda_name_snake
+  function_name = local.lambda_name_camel
   description = var.lambda_description
-  filename = local.lambda_filename
-  role = aws_iam_role.lambda.arn
+  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}.zip"
+  s3_bucket = var.lambda_s3_bucket != null ? var.lambda_s3_bucket : null
+  s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}.zip" : null
+  role = var.lambda_iam_role_arn
   handler = var.lambda_handler
   runtime = local.lambda_runtime
   memory_size = var.lambda_memory
@@ -64,32 +65,65 @@ resource "aws_lambda_function" "lambda" {
   environment {
     variables = merge({
       LAMBDA_FUNCTION_NAME = var.lambda_name,
-      LAMBDA_IAM_ROLE_ARN = aws_iam_role.lambda.arn,
+      LAMBDA_IAM_ROLE_ARN = var.lambda_iam_role_arn,
       LAMBDA_MEMORY_SIZE = var.lambda_memory,
       LAMBDA_RUNTIME = local.lambda_runtime,
       LAMBDA_TIMEOUT = var.lambda_timeout
     }, var.lambda_environment_variables)
   }
-  dynamic "vpc_config" {
-    for_each = var.lambda_subnet_ids == null ? {} : {
-      subnet_ids = var.lambda_subnet_ids
-      security_group_ids = var.lambda_security_group_ids
-    }
-    content {
-      subnet_ids = vpc_config.value.subnet_ids
-      security_group_ids = vpc_config.value.security_group_ids
-    }
+  vpc_config {
+    subnet_ids = tolist(sort(var.lambda_subnet_ids == null ? [] : var.lambda_subnet_ids))
+    security_group_ids = tolist(sort(var.lambda_security_group_ids == null ? [] : var.lambda_security_group_ids))
   }
-  dynamic "lifecycle" {
-    for_each = var.ignore_change == false ? {} : {
-      ignore_changes = [
-        "filename",
-        "last_modified",
-        "source_code_hash",
-        "source_code_size"]
-    }
-    content {
-      ignore_changes = lifecycle.value["ignore_changes"]
-    }
+  lifecycle {
+    ignore_changes = [
+      filename,
+      s3_bucket,
+      s3_key,
+      source_code_hash
+    ]
   }
+}
+
+# Lambda function
+resource "aws_lambda_function" "lambda_updated" {
+  count = var.ignore_changes == false ? 1 : 0
+  depends_on = [
+    null_resource.lambda_build
+  ]
+  function_name = local.lambda_name_camel
+  description = var.lambda_description
+  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}.zip"
+  s3_bucket = var.lambda_s3_bucket != null ? var.lambda_s3_bucket : null
+  s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}.zip" : null
+  role = var.lambda_iam_role_arn
+  handler = var.lambda_handler
+  runtime = local.lambda_runtime
+  memory_size = var.lambda_memory
+  timeout = var.lambda_timeout
+  environment {
+    variables = merge({
+      LAMBDA_FUNCTION_NAME = var.lambda_name,
+      LAMBDA_IAM_ROLE_ARN = var.lambda_iam_role_arn,
+      LAMBDA_MEMORY_SIZE = var.lambda_memory,
+      LAMBDA_RUNTIME = local.lambda_runtime,
+      LAMBDA_TIMEOUT = var.lambda_timeout
+    }, var.lambda_environment_variables)
+  }
+  vpc_config {
+    subnet_ids = tolist(sort(var.lambda_subnet_ids == null ? [] : var.lambda_subnet_ids))
+    security_group_ids = tolist(sort(var.lambda_security_group_ids == null ? [] : var.lambda_security_group_ids))
+  }
+}
+
+resource "aws_lambda_alias" "lambda" {
+  name = var.lambda_name
+  function_name = local.function_name
+  function_version = local.function_version
+}
+
+locals {
+  function_name = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].function_name : aws_lambda_function.lambda_updated[0].function_name
+  function_arn = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].arn : aws_lambda_function.lambda_updated[0].arn
+  function_version = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].version : aws_lambda_function.lambda_updated[0].version
 }

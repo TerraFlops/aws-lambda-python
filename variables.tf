@@ -14,6 +14,11 @@ variable "lambda_handler" {
   type = string
 }
 
+variable "lambda_s3_bucket" {
+  type = string
+  default = null
+}
+
 variable "lambda_python_version" {
   type = string
 }
@@ -38,10 +43,16 @@ variable "lambda_cloudwatch_retention_in_days" {
 
 variable "lambda_subnet_ids" {
   type = set(string)
+  default = []
+}
+
+variable "lambda_iam_role_arn" {
+  type = string
 }
 
 variable "lambda_security_group_ids" {
   type = set(string)
+  default = []
 }
 
 variable "lambda_environment_variables" {
@@ -91,6 +102,7 @@ variable "load_balancer_health_check_interval" {
 
 variable "load_balancer_health_check_url" {
   type = string
+  default = "/ping"
 }
 
 variable "load_balancer_https_enabled" {
@@ -118,7 +130,12 @@ variable "load_balancer_security_group_ids" {
   default = []
 }
 
-variable "ignore_change" {
+variable "load_balancer_path_patterns" {
+  type = list(string)
+  default = null
+}
+
+variable "ignore_changes" {
   type = bool
   default = false
 }
