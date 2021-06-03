@@ -38,7 +38,7 @@ resource "null_resource" "lambda_build" {
         eonxcom/lambda-build-python-${var.lambda_python_version}:latest \
         package_local "${local.timestamp}.zip";
       if [ ! -z "${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}" ]; then
-        aws s3 cp ${local.lambda_output_path}/${local.timestamp}.zip s3://${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}/${local.timestamp}.zip \
+        aws s3 cp ${local.lambda_output_path}/${local.timestamp}.zip s3://${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}/${local.timestamp}-${var.lambda_name}.zip \
           --acl bucket-owner-full-control \
           --sse AES256;
       fi;
@@ -54,7 +54,7 @@ resource "aws_lambda_function" "lambda_ignored" {
   ]
   function_name = local.lambda_name_camel
   description = var.lambda_description
-  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}.zip"
+  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}-${var.lambda_name}.zip"
   s3_bucket = var.lambda_s3_bucket != null ? var.lambda_s3_bucket : null
   s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}.zip" : null
   role = var.lambda_iam_role_arn
