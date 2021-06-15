@@ -14,7 +14,6 @@ data "aws_caller_identity" "default" {}
 
 # Archive the folder containing the Lambda functions source code
 data "archive_file" "lambda_delta" {
-  count = var.ignore_changes == false ? 1 : 0
   type = "zip"
   source_dir = "${var.lambda_path}/"
   output_path = local.lambda_delta_filename
@@ -27,7 +26,7 @@ resource "null_resource" "lambda_build" {
   ]
   # Trigger the build based on the hash of the Lambda functions source code to prevent unnecessary redeploys
   triggers = {
-    source_hash = var.ignore_changes == true ? null : filesha512(data.archive_file.lambda_delta[0].output_path)
+    source_hash = filesha512(data.archive_file.lambda_delta.output_path)
   }
   provisioner "local-exec" {
     # Build the Lambda function
@@ -39,7 +38,7 @@ resource "null_resource" "lambda_build" {
         eonxcom/lambda-build-python-${var.lambda_python_version}:latest \
         package_local "${local.timestamp}.zip";
       if [ ! -z "${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}" ]; then
-        aws s3 cp ${local.lambda_output_path}/${local.timestamp}.zip s3://${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}/${var.lambda_name}-${local.timestamp}.zip \
+        aws s3 cp ${local.lambda_output_path}/${local.timestamp}.zip s3://${var.lambda_s3_bucket == null ? "" : var.lambda_s3_bucket}/${local.timestamp}.zip \
           --acl bucket-owner-full-control \
           --sse AES256;
       fi;
@@ -47,7 +46,7 @@ resource "null_resource" "lambda_build" {
   }
 }
 
-# Lambda function (this version will be created if Terraform is set to ignore code changes)
+# Lambda function
 resource "aws_lambda_function" "lambda_ignored" {
   count = var.ignore_changes == true ? 1 : 0
   depends_on = [
@@ -55,9 +54,9 @@ resource "aws_lambda_function" "lambda_ignored" {
   ]
   function_name = local.lambda_name_camel
   description = var.lambda_description
-  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${var.lambda_name}-${local.timestamp}.zip"
+  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}.zip"
   s3_bucket = var.lambda_s3_bucket != null ? var.lambda_s3_bucket : null
-  s3_key = var.lambda_s3_bucket != null ? "${var.lambda_name}-${local.timestamp}.zip" : null
+  s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}.zip" : null
   role = var.lambda_iam_role_arn
   handler = var.lambda_handler
   runtime = local.lambda_runtime
@@ -86,7 +85,7 @@ resource "aws_lambda_function" "lambda_ignored" {
   }
 }
 
-# Lambda function (this version will be created if Terraform is NOT ignoring code changes)
+# Lambda function
 resource "aws_lambda_function" "lambda_updated" {
   count = var.ignore_changes == false ? 1 : 0
   depends_on = [
@@ -94,9 +93,9 @@ resource "aws_lambda_function" "lambda_updated" {
   ]
   function_name = local.lambda_name_camel
   description = var.lambda_description
-  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${var.lambda_name}-${local.timestamp}.zip"
+  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}.zip"
   s3_bucket = var.lambda_s3_bucket != null ? var.lambda_s3_bucket : null
-  s3_key = var.lambda_s3_bucket != null ? "${var.lambda_name}-${local.timestamp}.zip" : null
+  s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}.zip" : null
   role = var.lambda_iam_role_arn
   handler = var.lambda_handler
   runtime = local.lambda_runtime
