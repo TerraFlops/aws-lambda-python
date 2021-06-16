@@ -118,7 +118,7 @@ resource "aws_lambda_function" "lambda_updated" {
 
 resource "aws_lambda_alias" "lambda" {
   name = var.lambda_name
-  function_name = local.function_name
+  function_name = local.function_arn
   function_version = local.function_version
 }
 
