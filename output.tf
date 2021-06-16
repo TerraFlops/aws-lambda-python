@@ -1,13 +1,13 @@
 output "lambda_function_arn" {
-  value = local.function_arn
+  value = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].arn : aws_lambda_function.lambda_updated[0].arn
 }
 
 output "lambda_function_name" {
-  value = local.function_name
+  value = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].function_name : aws_lambda_function.lambda_updated[0].function_name
 }
 
 output "lambda_function_version" {
-  value = local.function_version
+  value = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].version : aws_lambda_function.lambda_updated[0].version
 }
 
 output "load_balancer_arn" {

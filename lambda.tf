@@ -117,13 +117,11 @@ resource "aws_lambda_function" "lambda_updated" {
 }
 
 resource "aws_lambda_alias" "lambda" {
+  depends_on = [
+    aws_lambda_function.lambda_ignored,
+    aws_lambda_function.lambda_updated
+  ]
   name = var.lambda_name
-  function_name = local.function_arn
-  function_version = local.function_version
-}
-
-locals {
-  function_name = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].function_name : aws_lambda_function.lambda_updated[0].function_name
-  function_arn = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].arn : aws_lambda_function.lambda_updated[0].arn
+  function_name = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].arn : aws_lambda_function.lambda_updated[0].arn
   function_version = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].version : aws_lambda_function.lambda_updated[0].version
 }

@@ -7,7 +7,7 @@ resource "aws_lambda_permission" "load_balancer" {
   count = var.load_balancer_enabled == false ? 0 : 1
   statement_id = "AllowExecutionFromLoadBalancer"
   action = "lambda:InvokeFunction"
-  function_name = local.function_name
+  function_name = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].function_name : aws_lambda_function.lambda_updated[0].function_name
   principal = "elasticloadbalancing.amazonaws.com"
   qualifier = aws_lambda_alias.lambda.name
 }
@@ -64,7 +64,7 @@ resource "aws_lb_target_group" "load_balancer" {
   ]
   count = var.load_balancer_enabled == true ? 1 : 0
   target_type = "lambda"
-  name = local.function_name
+  name = var.ignore_changes == true ? aws_lambda_function.lambda_ignored[0].function_name : aws_lambda_function.lambda_updated[0].function_name
   port = var.load_balancer_port_lambda
   protocol = "HTTP"
   health_check {
@@ -83,7 +83,7 @@ resource "aws_lb_target_group_attachment" "load_balancer" {
   ]
   count = var.load_balancer_enabled == true ? 1 : 0
   target_group_arn = aws_lb_target_group.load_balancer[0].arn
-  target_id = local.function_arn
+  target_id = aws_lambda_alias.lambda.arn
 }
 
 # Create load balancer listener rule
