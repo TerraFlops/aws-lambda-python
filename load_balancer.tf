@@ -1,4 +1,9 @@
 resource "aws_lambda_permission" "load_balancer" {
+  depends_on = [
+    aws_lambda_function.lambda_ignored,
+    aws_lambda_function.lambda_updated,
+    aws_lambda_alias.lambda
+  ]
   count = var.load_balancer_enabled == false ? 0 : 1
   statement_id = "AllowExecutionFromLoadBalancer"
   action = "lambda:InvokeFunction"
