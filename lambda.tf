@@ -40,7 +40,7 @@ resource "null_resource" "lambda_build" {
         curl \
         gnupg \
         lsb-release;
-      usermod -aG docker ${USER};
+      usermod -aG docker \$\{USER};
       mkdir -p ${local.lambda_output_path};
       docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
