@@ -39,8 +39,7 @@ resource "null_resource" "lambda_build" {
       apt install -y -o APT::Sandbox::User=root --no-install-recommends gnupg;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends lsb-release;
       mkdir -p ${local.lambda_output_path};
-      ls /usr/bin;
-      ls /usr/local/bin;      
+      ls / -l;
       /usr/local/bin/docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
         -v ${local.lambda_output_path}/:/opt/output \
