@@ -1,6 +1,5 @@
 locals {
   # Calculate values for internal use
-  timestamp = formatdate("YYYYMMDDhhmmss", timestamp())
   lambda_name_camel = join("", [for element in split("-", lower(replace(var.lambda_name, "_", "-"))) : title(element)])
   lambda_runtime = "python${var.lambda_python_version}"
 }
@@ -12,9 +11,6 @@ data "aws_caller_identity" "default" {}
 # Lambda function
 resource "aws_lambda_function" "lambda_ignored" {
   count = var.ignore_changes == true ? 1 : 0
-  depends_on = [
-    null_resource.lambda_build
-  ]
   function_name = local.lambda_name_camel
   description = var.lambda_description
   role = var.lambda_iam_role_arn
@@ -48,14 +44,8 @@ resource "aws_lambda_function" "lambda_ignored" {
 # Lambda function
 resource "aws_lambda_function" "lambda_updated" {
   count = var.ignore_changes == false ? 1 : 0
-  depends_on = [
-    null_resource.lambda_build
-  ]
   function_name = local.lambda_name_camel
   description = var.lambda_description
-  filename = var.lambda_s3_bucket != null ? null : "${local.lambda_output_path}/${local.timestamp}.zip"
-  s3_bucket = var.lambda_s3_bucket != null ? var.lambda_s3_bucket : null
-  s3_key = var.lambda_s3_bucket != null ? "${local.timestamp}.zip" : null
   role = var.lambda_iam_role_arn
   handler = var.lambda_handler
   runtime = local.lambda_runtime
