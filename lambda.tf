@@ -31,7 +31,7 @@ resource "null_resource" "lambda_build" {
   provisioner "local-exec" {
     # Build the Lambda function
     command = <<-COMMAND
-      apt o APT::Sandbox::User=root update;
+      apt -o APT::Sandbox::User=root update;
       apt install --reinstall -y -o APT::Sandbox::User=root docker;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends apt-transport-https;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends ca-certificates;
