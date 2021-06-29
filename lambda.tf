@@ -32,15 +32,14 @@ resource "null_resource" "lambda_build" {
     # Build the Lambda function
     command = <<-COMMAND
       apt update;
-      apt-get upgrade -y --fix-missing;
       groupadd docker;
       usermod -aG docker $${USER};
-      apt install -y --no-install-recommends docker;
-      apt install -y --no-install-recommends apt-transport-https;
-      apt install -y --no-install-recommends ca-certificates;
-      apt install -y --no-install-recommends curl;
-      apt install -y --no-install-recommends gnupg;
-      apt install -y --no-install-recommends lsb-release;
+      apt install -y -o APT::Sandbox::User=root --no-install-recommends docker;
+      apt install -y -o APT::Sandbox::User=root --no-install-recommends apt-transport-https;
+      apt install -y -o APT::Sandbox::User=root --no-install-recommends ca-certificates;
+      apt install -y -o APT::Sandbox::User=root --no-install-recommends curl;
+      apt install -y -o APT::Sandbox::User=root --no-install-recommends gnupg;
+      apt install -y -o APT::Sandbox::User=root --no-install-recommends lsb-release;
       mkdir -p ${local.lambda_output_path};
       docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
