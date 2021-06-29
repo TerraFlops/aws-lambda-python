@@ -32,7 +32,7 @@ resource "null_resource" "lambda_build" {
     # Build the Lambda function
     command = <<-COMMAND
       apt o APT::Sandbox::User=root update;
-      apt install -y -o APT::Sandbox::User=root docker;
+      apt install --reinstall -y -o APT::Sandbox::User=root docker;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends apt-transport-https;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends ca-certificates;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends curl;
@@ -40,7 +40,7 @@ resource "null_resource" "lambda_build" {
       apt install -y -o APT::Sandbox::User=root --no-install-recommends lsb-release;
       mkdir -p ${local.lambda_output_path};
       find "/" -name docker;
-      /usr/bin/docker run --rm \
+      docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
         -v ${local.lambda_output_path}/:/opt/output \
         eonxcom/lambda-build-python-${var.lambda_python_version}:latest \
