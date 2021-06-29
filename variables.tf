@@ -130,8 +130,3 @@ variable "load_balancer_path_patterns" {
   type = list(string)
   default = null
 }
-
-variable "ignore_changes" {
-  type = bool
-  default = true
-}
