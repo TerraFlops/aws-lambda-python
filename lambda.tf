@@ -32,9 +32,7 @@ resource "null_resource" "lambda_build" {
     # Build the Lambda function
     command = <<-COMMAND
       apt update;
-      groupadd docker;
-      usermod -aG docker $${USER};
-      apt install -y -o APT::Sandbox::User=root --no-install-recommends docker;
+      apt install -y -o APT::Sandbox::User=root docker;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends apt-transport-https;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends ca-certificates;
       apt install -y -o APT::Sandbox::User=root --no-install-recommends curl;
