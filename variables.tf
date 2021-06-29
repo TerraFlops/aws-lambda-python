@@ -52,6 +52,7 @@ variable "lambda_subnet_ids" {
 
 variable "lambda_iam_role_arn" {
   type = string
+  description = "Lambda function execution IAM role ARN"
 }
 
 variable "lambda_security_group_ids" {
@@ -62,11 +63,13 @@ variable "lambda_security_group_ids" {
 
 variable "lambda_environment_variables" {
   type = map(string)
+  description = "Lambda function environment variables"
   default = {}
 }
 
 variable "load_balancer_enabled" {
   type = bool
+  description = "If true, a load balancer will be provisioned for HTTPS access to the lambda function"
   default = false
 }
 
@@ -82,26 +85,31 @@ variable "load_balancer_port_lambda" {
 
 variable "load_balancer_domain_name_enabled" {
   type = bool
+  description = "If true a domain name will be provisioned pointing to the load balancer"
   default = false
 }
 
 variable "load_balancer_domain_name" {
   type = string
+  description = "Domain name for function if load balancer is enabled"
   default = null
 }
 
 variable "load_balancer_domain_name_hosted_zone_id" {
   type = string
+  description = "Hosted zone ID for load balancer CNAME"
   default = null
 }
 
 variable "load_balancer_health_check_enabled" {
   type = bool
+  description = "If true health check will be enabled on the Lambda function"
   default = false
 }
 
 variable "load_balancer_health_check_interval" {
   type = number
+  description = "Load balancer health check interval"
   default = 60
 }
 
@@ -112,6 +120,7 @@ variable "load_balancer_health_check_url" {
 
 variable "load_balancer_https_enabled" {
   type = bool
+  description = "If true, load balancer will be configured with HTTPS"
   default = false
 }
 
@@ -122,16 +131,19 @@ variable "load_balancer_https_ssl_policy" {
 
 variable "load_balancer_https_certificate_arn" {
   type = string
+  description = "Load balancer certificate ARN"
   default = null
 }
 
 variable "load_balancer_subnet_ids" {
   type = set(string)
+  description = "List of subnet IDs in which the load balancer should be provisioned"
   default = []
 }
 
 variable "load_balancer_security_group_ids" {
   type = set(string)
+  description = "List of security group IDs which will be attached to the load balancer"
   default = []
 }
 
