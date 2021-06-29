@@ -6,10 +6,6 @@ variable "lambda_description" {
   type = string
 }
 
-variable "lambda_path" {
-  type = string
-}
-
 variable "lambda_handler" {
   type = string
 }
@@ -137,5 +133,5 @@ variable "load_balancer_path_patterns" {
 
 variable "ignore_changes" {
   type = bool
-  default = false
+  default = true
 }
