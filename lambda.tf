@@ -31,6 +31,8 @@ resource "null_resource" "lambda_build" {
   provisioner "local-exec" {
     # Build the Lambda function
     command = <<-COMMAND
+      yum install -y docker || true;
+      apt install -y docker || true;
       mkdir -p ${local.lambda_output_path};
       docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
