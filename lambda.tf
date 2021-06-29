@@ -31,15 +31,14 @@ resource "null_resource" "lambda_build" {
   provisioner "local-exec" {
     # Build the Lambda function
     command = <<-COMMAND
-      adduser _apt --force-badname;
       apt update;
-      apt install -y --no-install-recommends \
-        docker \
-        apt-transport-https \
-        ca-certificates \
-        curl \
-        gnupg \
-        lsb-release;
+      apt-get upgrade -y --fix-missing;
+      apt install -y --no-install-recommends docker;
+      apt install -y --no-install-recommends apt-transport-https;
+      apt install -y --no-install-recommends ca-certificates;
+      apt install -y --no-install-recommends curl;
+      apt install -y --no-install-recommends gnupg;
+      apt install -y --no-install-recommends lsb-release;
       usermod -aG docker $${USER};
       mkdir -p ${local.lambda_output_path};
       docker run --rm \
