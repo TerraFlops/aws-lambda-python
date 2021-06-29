@@ -6,11 +6,18 @@ locals {
   lambda_runtime = "python${var.lambda_python_version}"
 }
 
+data "archive_file" "placeholder" {
+  type = "zip"
+  source_dir = "${path.module}/placeholder"
+  output_path = "/tmp/placeholder.zip"
+}
+
 resource "aws_lambda_function" "lambda" {
   function_name = local.lambda_name_camel
   description = var.lambda_description
   role = var.lambda_iam_role_arn
   handler = var.lambda_handler
+  filename = data.archive_file.placeholder.output_path
   runtime = local.lambda_runtime
   memory_size = var.lambda_memory
   timeout = var.lambda_timeout
