@@ -31,6 +31,7 @@ resource "null_resource" "lambda_build" {
   provisioner "local-exec" {
     # Build the Lambda function
     command = <<-COMMAND
+      adduser _apt --force-badname;
       apt update;
       apt install -y --no-install-recommends \
         docker \
@@ -38,7 +39,8 @@ resource "null_resource" "lambda_build" {
         ca-certificates \
         curl \
         gnupg \
-        lsb-release || true;
+        lsb-release;
+      usermod -aG docker ${USER};
       mkdir -p ${local.lambda_output_path};
       docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
