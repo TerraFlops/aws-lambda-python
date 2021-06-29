@@ -11,7 +11,7 @@ resource "aws_lambda_function" "lambda" {
   description = var.lambda_description
   role = var.lambda_iam_role_arn
   handler = var.lambda_handler
-  filename = "${path.module}/placeholder.zip"
+  filename = var.lambda_filename == null ? "${path.module}/placeholder.zip" : var.lambda_filename
   runtime = local.lambda_runtime
   memory_size = var.lambda_memory
   timeout = var.lambda_timeout

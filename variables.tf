@@ -8,6 +8,12 @@ variable "lambda_description" {
   description = "Lambda function description"
 }
 
+variable "lambda_filename" {
+  type = string
+  description = "Lambda ZIP filename, if none supplied placeholder Lambda function will be deployed"
+  default = null
+}
+
 variable "lambda_handler" {
   type = string
   description = "Lambda function handler (will default to placeholder function entrypoint)"
