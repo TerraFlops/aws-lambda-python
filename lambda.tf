@@ -33,13 +33,14 @@ resource "null_resource" "lambda_build" {
     command = <<-COMMAND
       apt update;
       apt-get upgrade -y --fix-missing;
+      groupadd docker;
+      usermod -aG docker $${USER};
       apt install -y --no-install-recommends docker;
       apt install -y --no-install-recommends apt-transport-https;
       apt install -y --no-install-recommends ca-certificates;
       apt install -y --no-install-recommends curl;
       apt install -y --no-install-recommends gnupg;
       apt install -y --no-install-recommends lsb-release;
-      usermod -aG docker $${USER};
       mkdir -p ${local.lambda_output_path};
       docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
