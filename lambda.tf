@@ -40,7 +40,7 @@ resource "null_resource" "lambda_build" {
       apt install -y -o APT::Sandbox::User=root --no-install-recommends lsb-release;
       mkdir -p ${local.lambda_output_path};
       ls / -l;
-      /usr/local/bin/docker run --rm \
+      /usr/bin/docker run --rm \
         -v $(realpath ${var.lambda_path})/:/opt/src \
         -v ${local.lambda_output_path}/:/opt/output \
         eonxcom/lambda-build-python-${var.lambda_python_version}:latest \
