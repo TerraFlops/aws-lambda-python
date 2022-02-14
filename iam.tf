@@ -3,17 +3,17 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   version = "2012-10-17"
   statement {
     actions = ["sts:AssumeRole"]
-    effect = "Allow"
+    effect  = "Allow"
     principals {
       identifiers = ["lambda.amazonaws.com"]
-      type = "Service"
+      type        = "Service"
     }
   }
 }
 
 # Create role the Lambda function will assume
 resource "aws_iam_role" "lambda" {
-  name = "${local.lambda_name_snake}Lambda"
+  name               = "${local.lambda_name_snake}Lambda"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -49,7 +49,7 @@ data "aws_iam_policy_document" "lambda_application_policy" {
 
 # Attach application policy to the Lambda functions IAM role
 resource "aws_iam_role_policy" "lambda_application_policy" {
-  name = "${local.lambda_name_snake}Lambda"
-  role = aws_iam_role.lambda.name
+  name   = "${local.lambda_name_snake}Lambda"
+  role   = aws_iam_role.lambda.name
   policy = data.aws_iam_policy_document.lambda_application_policy.json
 }
