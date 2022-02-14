@@ -2,9 +2,9 @@ locals {
   # Calculate values for internal use
   lambda_name_snake     = join("", [for element in split("-", lower(replace(var.lambda_name, "_", "-"))) : title(element)])
   lambda_runtime        = "python${var.lambda_python_version}"
-  lambda_delta_filename = "/tmp/lambda-${var.lambda_name}-delta.zip"
-  lambda_build_path     = "/tmp/lambda-${var.lambda_name}-build"
-  lambda_filename       = "/tmp/lambda-${var.lambda_name}.zip"
+  lambda_delta_filename = "${path.module}/lambda-${var.lambda_name}-delta.zip"
+  lambda_build_path     = "${path.module}/lambda-${var.lambda_name}-build"
+  lambda_filename       = "${path.module}/lambda-${var.lambda_name}.zip"
 }
 
 # Retrieve the AWS region and caller identity to which we are deploying this function
