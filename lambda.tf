@@ -68,8 +68,10 @@ resource "aws_lambda_function" "lambda" {
   }
   dynamic "vpc_config" {
     for_each = var.lambda_subnet_ids == null ? {} : {
-      subnet_ids         = var.lambda_subnet_ids
-      security_group_ids = var.lambda_security_group_ids
+      one_block = {
+        subnet_ids         = var.lambda_subnet_ids
+        security_group_ids = var.lambda_security_group_ids
+      }
     }
     content {
       subnet_ids         = vpc_config.value.subnet_ids
